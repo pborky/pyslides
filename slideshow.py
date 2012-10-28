@@ -127,7 +127,6 @@ class SlideShow(object):
 
     def __call__(self, *args, **kwargs):
         from  pygame import display
-        from libtrans import transitions
         from os.path import basename
         import re
         display.init()
@@ -147,10 +146,6 @@ class SlideShow(object):
         if not delay > 0:
             print '\n##  Warning: Delay too short. Continuing with delay of 10s...'
             delay = 10000
-        transition = self.transition
-        if transition not in transitions.keys():
-            print '\n##  Warning: ' + transition + ' is not a valid transition. Continuing with no transition...'
-            transition = 'None'
 
         pygame.time.set_timer(pygame.USEREVENT + 1, int(delay))
 

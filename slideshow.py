@@ -161,7 +161,7 @@ class SlideShow(object):
             self.img_callback.__call__(ImgMessage(None,None,None,self.principal))
         while True:
             for event in pygame.event.get():
-                if (event.type == pygame.QUIT):
+                if event.type == pygame.QUIT:
                     pygame.quit()
                     return -1
                 elif event.type == pygame.KEYDOWN:
@@ -174,8 +174,6 @@ class SlideShow(object):
                             self.kp_callback.__call__(KpMessage(event.key,seq,img,self.principal))
                         seq += 1
                 elif event.type == pygame.USEREVENT + 1:
-                    seq = 1
-                    i += 1
                     if i >= len(self.paths):
                         print '\nFinished.'
                         pygame.quit()
@@ -189,4 +187,6 @@ class SlideShow(object):
                     pygame.display.update()
                     if callable(self.img_callback):
                         self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
+                    i += 1
+                    seq = 1
             pygame.time.wait(100)

@@ -124,7 +124,11 @@ class SlideShow(object):
             xDisplace = int((area[0] - width/ySizer) / 2)
             yDisplace = 0
         return scale(image, (int(width/sizer),int(height/sizer))), (xDisplace, yDisplace)
-
+    def _refresh(self, surface, blit, bg):
+        surface.fill(bg)
+        surface.blit(*blit)
+        pygame.display.update()
+        return surface
     def __call__(self, *args, **kwargs):
         from  pygame import display
         from os.path import basename
@@ -152,6 +156,8 @@ class SlideShow(object):
         i = 0
         seq = 1
         img = None
+        VOTES = {1: (100,0,0), 2: (0,0,0), 3: (0,100,0)}
+        blitdata = None
         if callable(self.img_callback):
             self.img_callback.__call__(ImgMessage(None,None,None,self.principal))
         while True:
@@ -167,6 +173,9 @@ class SlideShow(object):
                         print '\nKeypress:   ' + event.unicode
                         if callable(self.kp_callback):
                             self.kp_callback.__call__(KpMessage(event.key,seq,img,self.principal))
+                            background = VOTES.get(KpMessage.getKey(event.key)) if KpMessage.isValidKey(event.key) else (0,0,0)
+                            if blitdata:
+                                self._refresh(main_surface, blitdata, background)
                         seq += 1
                 elif event.type == pygame.USEREVENT + 1:
                     if i >= len(self.paths):
@@ -177,9 +186,8 @@ class SlideShow(object):
                     img = re.match(r'(.*)[.][^.]+', fn).group(1).replace('.','')
                     print '\nShowing:   ' + self.paths[i]
                     blitdata = self._rationalSizer(pygame.image.load(self.paths[i]), resolution)
-                    main_surface.fill((0, 0, 0))
-                    main_surface.blit(*blitdata)
-                    pygame.display.update()
+                    background = (0,0,0)
+                    main_surface = self._refresh(main_surface, blitdata, background)
                     if callable(self.img_callback):
                         self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
                     i += 1

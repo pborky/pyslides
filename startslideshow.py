@@ -2,6 +2,9 @@
 from pygtk import require
 require('2.0')
 import gtk
+from sys import argv
+
+path = argv[1] if len(argv)>1 else '/home/pi/img'
 
 class Base(object):
     def __init__(self):
@@ -58,7 +61,7 @@ class Base(object):
         kp_cbs = init_cb('KpJsonCallback',JsonTransceiver('kp.json')),\
                  init_cb('KpGpioCallback',GpioTransceiver(13, False))
         slide = SlideShow(
-            path='/home/pi/img/',
+            path=path,
             transition='None',
             fullscreen=True,
             delay=10,

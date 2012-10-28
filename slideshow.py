@@ -186,6 +186,7 @@ class SlideShow(object):
                     if callable(self.img_callback):
                         self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
                     blitdata = self._rationalSizer(pygame.image.load(self.paths[i]), resolution)
-                    main_surface = transitions[transition](main_surface, blitdata)
+                    main_surface.fill((0, 0, 0))
+                    main_surface.blit(*blitdata)
+                    pygame.display.update()
             pygame.time.wait(100)
-

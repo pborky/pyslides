@@ -183,10 +183,10 @@ class SlideShow(object):
                     fn = basename(self.paths[i])
                     img = re.match(r'(.*)[.][^.]+', fn).group(1).replace('.','')
                     print '\nShowing:   ' + self.paths[i]
-                    if callable(self.img_callback):
-                        self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
                     blitdata = self._rationalSizer(pygame.image.load(self.paths[i]), resolution)
                     main_surface.fill((0, 0, 0))
                     main_surface.blit(*blitdata)
                     pygame.display.update()
+                    if callable(self.img_callback):
+                        self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
             pygame.time.wait(100)

@@ -93,9 +93,9 @@ class GpioTransceiver(Transceiver):
         for i in data:
             for j in i:
                 GPIO.output(self.pin, GPIO.LOW)
-                sleep(0.02 if j == 0 else 0.08)
+                sleep(0.01 if j == '0' else 0.04)
                 GPIO.output(self.pin, GPIO.HIGH)
-                sleep(0.08 if j == 0 else 0.02)
+                sleep(0.04 if j == '0' else 0.01)
             sleep(0.1)
         GPIO.output(self.pin, GPIO.LOW)
     def _process(self,msg):
@@ -113,11 +113,11 @@ class GpioTransceiver(Transceiver):
             if not data:
                 data = ['']
             elif isinstance(data,int):
-                data = ''.join('1' for i in range(data))
+                data = ''.join('0' for i in range(data))
             else:
                 data = ['']
         try: 
             self._send(data)
-            print '%s: Message sent: %s' % (self._get_name(),data)
+            print '%s: Message sent to pin %s: %s' % (self._get_name(), self.pin,data)
         except: 
             print '%s: Message FAILED to be sent: %s' % (self._get_name(),data)

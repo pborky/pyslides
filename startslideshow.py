@@ -7,7 +7,7 @@ class Base(object):
     def __init__(self):
         from gtk import Window,WINDOW_TOPLEVEL,Button,Label,HBox,Entry,VBox,VSeparator
         self.window =  Window(WINDOW_TOPLEVEL)
-        self.window.set_title("Hello Buttons!")
+        self.window.set_title("Slideshow")
         self.window.connect("delete_event", self.delete_event)
         self.window.set_border_width(10)
         self.vbox = VBox(False, 0)
@@ -40,8 +40,8 @@ class Base(object):
         gtk.main_quit()
         return False
     def key_press_event(self, widget, event):
-        from gtk.gdk import keyval_from_name
-        if event.keyval in (keyval_from_name('Return'),keyval_from_name('Entre')):
+        from gtk.gdk import keyval_from_name,keyval_name
+        if event.keyval in (keyval_from_name('Return'),keyval_from_name('KP_Enter')):
             self.callback(widget)
     def callback(self, widget):
         from slideshow import SlideShow
@@ -58,9 +58,9 @@ class Base(object):
         kp_cbs = init_cb('KpJsonCallback',JsonTransceiver('kp.json')),\
                  init_cb('KpGpioCallback',GpioTransceiver(13, False))
         slide = SlideShow(
-            path='/home/peterb/tmp/rpi/slideshow/img/',
-            transition='Superimposition',
-            fullscreen=False,
+            path='/home/pi/img/',
+            transition='None',
+            fullscreen=True,
             delay=10,
             principal=self.editable.get_text(),
             img_callback = lambda msg: [cb(msg) for cb in img_cbs],

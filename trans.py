@@ -77,6 +77,8 @@ class GpioTransceiver(Transceiver):
         super(GpioTransceiver, self).__init__()
         self.pin = pin
         self.bcd = bcd
+        try:self._init(pin)
+        except: pass
     def _init(self,pin):
         import RPi.GPIO as GPIO
         GPIO.setmode(GPIO.BOARD)
@@ -114,4 +116,8 @@ class GpioTransceiver(Transceiver):
                 data = ''.join('1' for i in range(data))
             else:
                 data = ['']
-        print '%s: Message sent: %s' % (self._get_name(),data)
+        try: 
+            self._send(data)
+            print '%s: Message sent: %s' % (self._get_name(),data)
+        except: 
+            print '%s: Message FAILED to be sent: %s' % (self._get_name(),data)

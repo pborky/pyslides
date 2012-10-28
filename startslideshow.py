@@ -57,9 +57,9 @@ class Base(object):
             t.start()
             return trans.enqueue
         img_cbs = init_cb('ImgJsonCallback',JsonTransceiver('img.json')),\
-                  init_cb('ImgGpioCallback',GpioTransceiver(12))
+                  init_cb('ImgGpioCallback',GpioTransceiver(24))
         kp_cbs = init_cb('KpJsonCallback',JsonTransceiver('kp.json')),\
-                 init_cb('KpGpioCallback',GpioTransceiver(13, False))
+                 init_cb('KpGpioCallback',GpioTransceiver(26, False))
         slide = SlideShow(
             path=path,
             transition='None',

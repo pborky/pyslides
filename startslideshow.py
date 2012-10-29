@@ -49,8 +49,12 @@ class Base(object):
             self.callback(widget)
     def _getFilePaths(self, fileTypes, recursive=True):
         import os
+        import re
         from sys import argv
-        path = argv[1:] if len(argv)>1 else '/home/pi/img/*.jpg'
+        pt = re.compile(r'.*([%(0)s][^%(0)s]*)'%{'0':os.path.extsep})
+        path = [a for m,a in ((pt.match(os.path.basename(a)),a) for a in argv[1:]) if m and m.group(1) in fileTypes]
+        if not path:
+            path = '/home/pi/img/*.jpg'
         if isinstance(path, str):
             ## Returns list containing paths of files in /path/ that are of a file type in /fileTypes/,
             ##	if /recursive/ is False subdirectories are not checked.
@@ -100,9 +104,9 @@ class Base(object):
             gray = path[0]
             result = []
             for p in permutation(path[1:]):
-                #result.append(gray)
                 result.append(p)
-            return result[1:]
+                #result.append(gray)
+            return result
         slide = SlideShow(
             path=self._getFilePaths(('.jpg', '.jpeg', '.png')),
             transition='None',

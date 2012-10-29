@@ -1,4 +1,7 @@
 
+def iterable(x):
+    from collections import Iterable
+    return isinstance(x,Iterable)
 
 class Message(object):
     def __init__(self, payload, *args, **kwargs):
@@ -14,7 +17,7 @@ class Transceiver(object):
     def __init__(self):
         from Queue import Queue
         print 'Initialising queue.'
-        self.queue = Queue()
+        self.queue = Queue(1)
     def _get_name(self):
         from threading import currentThread
         return currentThread().getName()
@@ -23,11 +26,13 @@ class Transceiver(object):
         if not isinstance(msg, Message):
             raise Exception('%s: Das Fak !' % self._get_name())
         try:
-            print '%s: Enqueue %s.'  % (self._get_name(),msg)
             #self.queue.put(msg,block=True,timeout=1.0)
             self.queue.put_nowait(msg)
+            print '%s: Enqueue %s.'  % (self._get_name(),msg)
+            return True
         except Full:
             print '%s: Queue busy. Dropping %s.' % (self._get_name(),msg)
+            return False
     def _process(self, msg):
         raise Exception('Not implemented.')
     def __call__(self, *args, **kwargs):
@@ -99,6 +104,7 @@ class GpioTransceiver(Transceiver):
             sleep(0.1)
         GPIO.output(self.pin, GPIO.LOW)
     def _process(self,msg):
+        from time import sleep
         data = []
         if self.bcd:
             data = msg.payload.get('img')
@@ -119,5 +125,6 @@ class GpioTransceiver(Transceiver):
         try: 
             self._send(data)
             print '%s: Message sent to pin %s: %s' % (self._get_name(), self.pin,data)
-        except: 
+        except:
+            sleep(1.0)
             print '%s: Message FAILED to be sent: %s' % (self._get_name(),data)

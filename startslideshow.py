@@ -2,9 +2,10 @@
 from pygtk import require
 require('2.0')
 import gtk
-from sys import argv
 
-path = argv[1] if len(argv)>1 else '/home/pi/img'
+def iterable(x):
+    from collections import Iterable
+    return isinstance(x,Iterable)
 
 class Base(object):
     def __init__(self):
@@ -46,29 +47,73 @@ class Base(object):
         from gtk.gdk import keyval_from_name,keyval_name
         if event.keyval in (keyval_from_name('Return'),keyval_from_name('KP_Enter')):
             self.callback(widget)
+    def _getFilePaths(self, fileTypes, recursive=True):
+        import os
+        from sys import argv
+        path = argv[1:] if len(argv)>1 else '/home/pi/img/*.jpg'
+        if isinstance(path, str):
+            ## Returns list containing paths of files in /path/ that are of a file type in /fileTypes/,
+            ##	if /recursive/ is False subdirectories are not checked.
+            paths = []
+            if recursive:
+                for root, folders, files in os.walk(path, followlinks=True):
+                    for file in files:
+                        for fileType in fileTypes:
+                            if file.endswith(fileType):
+                                paths.append(os.path.join(root, file))
+            else:
+                for item in os.listdir(path):
+                    for fileType in fileTypes:
+                        if item.endswith(fileType):
+                            paths.append(os.path.join(root, item))
+            return paths
+        elif iterable(path):
+            return path
+        else:
+            return []
+    def _init_cb(self,trans):
+        from threading import Thread
+        if not iterable(trans):
+            trans = trans,
+        callbacks  = []
+        for name,cb in trans:
+            t = Thread(target=cb, name='%sThread'%name)
+            t.daemon = True
+            t.start()
+            callbacks.append(cb.enqueue)
+        def wrap(msg):
+            for cb in callbacks:
+                if not cb(msg):
+                    return False
+            return True
+        return wrap
     def callback(self, widget):
         from slideshow import SlideShow
         from trans import Message,GpioTransceiver,JsonTransceiver
-        from threading import Thread
 
-        def init_cb(name,trans):
-            t = Thread(target=trans, name='%sThread'%name)
-            t.daemon = True
-            t.start()
-            return trans.enqueue
-        img_cbs = init_cb('ImgJsonCallback',JsonTransceiver('img.json')),\
-                  init_cb('ImgGpioCallback',GpioTransceiver(24))
-        kp_cbs = init_cb('KpJsonCallback',JsonTransceiver('kp.json')),\
-                 init_cb('KpGpioCallback',GpioTransceiver(26, False))
+        if not self.editable.get_text():
+            return False
+        img_cbs = self._init_cb([('ImgGpioCallback',GpioTransceiver(24)),('ImgJsonCallback',JsonTransceiver('img.json'))])
+        kp_cbs = self._init_cb([('KpGpioCallback',GpioTransceiver(24)),('KpJsonCallback',JsonTransceiver('img.json'))])
+        def ordfnc(path):
+            from numpy.random import permutation
+            gray = path[0]
+            result = []
+            for p in permutation(path[1:]):
+                #result.append(gray)
+                result.append(p)
+            return result[1:]
         slide = SlideShow(
-            path=path,
+            path=self._getFilePaths(('.jpg', '.jpeg', '.png')),
             transition='None',
             fullscreen=True,
             delay=10,
+            order=ordfnc,
             principal=self.editable.get_text(),
-            img_callback = lambda msg: [cb(msg) for cb in img_cbs],
-            kp_callback = lambda msg: [cb(msg) for cb in kp_cbs],
+            img_callback = img_cbs,
+            kp_callback = kp_cbs,
         )
+        self.editable.set_text('')
         slide()
     def __call__(self):
         gtk.main()

@@ -1,6 +1,5 @@
 
 from os import environ as env
-from collections import Iterable
 from sys import exit
 from trans import Message
 
@@ -10,6 +9,10 @@ import pygame
 #import pymedia   ## Will be adding later for a wider support of audio formats.
 
 IMAGE_TYPES = ('.jpg', '.jpeg', '.png')
+
+def iterable(x):
+    from collections import Iterable
+    return isinstance(x,Iterable)
 
 class JsonMessage(Message):
     def __init__(self, payload):
@@ -31,17 +34,17 @@ class ImgMessage(JsonMessage):
         })
 class KpMessage(JsonMessage):
     _KEYS = {
-        pygame.K_KP0 : 0,
-        pygame.K_KP1 : 1,
-        pygame.K_KP2 : 2,
-        pygame.K_KP3 : 3,
-        pygame.K_KP4 : 4,
-        pygame.K_KP5 : 5,
-        pygame.K_KP6 : 6,
-        pygame.K_KP7 : 7,
-        pygame.K_KP8 : 8,
-        pygame.K_KP9 : 9,
-        pygame.K_KP_ENTER : -1
+        pygame.K_KP0 : 2,
+        #pygame.K_KP1 : 0,
+        #pygame.K_KP2 : 0,
+        #pygame.K_KP3 : 0,
+        #pygame.K_KP4 : 0,
+        #pygame.K_KP5 : 0,
+        #pygame.K_KP6 : 0,
+        #pygame.K_KP7 : 0,
+        #pygame.K_KP8 : 0,
+        #pygame.K_KP9 : 0,
+        pygame.K_KP_ENTER : 1
     }
     @classmethod
     def isValidKey(cls, key):
@@ -64,7 +67,6 @@ class SlideShow(object):
                  resolution=(400,300),
                  fullscreen=True,
                  path= '%(HOME)s/Pictures/' % env,
-                 recursive=True,
                  order=False,
                  delay=5,
                  transition='None',
@@ -78,34 +80,17 @@ class SlideShow(object):
         self.img_callback = img_callback
         self.kp_callback = kp_callback
         self.principal = principal
+        self.paths = self._getFilePaths(path,order)
 
+    def _getFilePaths(self, path, order):
         if callable(order):
             orderfnc = order
         elif order:
             orderfnc = lambda x: tuple(i for i in x)
         else:
             from numpy.random import permutation
-            orderfnc = lambda x: permutation(x).tolist() if isinstance(x,Iterable) else x
-
-        self.paths = orderfnc(self._getFilePaths(path, IMAGE_TYPES, recursive))
-
-    def _getFilePaths(self, path, fileTypes, recursive=True):
-        import os
-        ## Returns list containing paths of files in /path/ that are of a file type in /fileTypes/,
-        ##	if /recursive/ is False subdirectories are not checked.
-        paths = []
-        if recursive:
-            for root, folders, files in os.walk(path, followlinks=True):
-                for file in files:
-                    for fileType in fileTypes:
-                        if file.endswith(fileType):
-                            paths.append(os.path.join(root, file))
-        else:
-            for item in os.listdir(path):
-                for fileType in fileTypes:
-                    if item.endswith(fileType):
-                        paths.append(os.path.join(root, item))
-        return paths
+            orderfnc = lambda x: permutation(x).tolist() if iterable(x) else x,
+        return orderfnc(path)
 
     def _rationalSizer(self, image, area):
         from pygame.transform import scale
@@ -156,7 +141,7 @@ class SlideShow(object):
         i = 0
         seq = 1
         img = None
-        VOTES = {1: (100,0,0), 2: (0,0,0), 3: (0,100,0)}
+        VOTES = {1: (100,0,0), 2: (0,100,0), 0:(0,0,0)}
         blitdata = None
         if callable(self.img_callback):
             self.img_callback.__call__(ImgMessage(None,None,None,self.principal))
@@ -174,11 +159,13 @@ class SlideShow(object):
                         if callable(self.kp_callback):
                             self.kp_callback.__call__(KpMessage(event.key,seq,img,self.principal))
                             background = VOTES.get(KpMessage.getKey(event.key)) if KpMessage.isValidKey(event.key) else (0,0,0)
-                            if blitdata:
+                            if blitdata and background:
                                 self._refresh(main_surface, blitdata, background)
                         seq += 1
                 elif event.type == pygame.USEREVENT + 1:
                     if i >= len(self.paths):
+                        if callable(self.img_callback):
+                            self.img_callback.__call__(ImgMessage(None,None,None,self.principal))
                         print '\nFinished.'
                         pygame.quit()
                         return i

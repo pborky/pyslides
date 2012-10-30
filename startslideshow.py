@@ -98,14 +98,14 @@ class Base(object):
         if not self.editable.get_text():
             return False
         img_cbs = self._init_cb([('ImgGpioCallback',GpioTransceiver(24)),('ImgJsonCallback',JsonTransceiver('img.json'))])
-        kp_cbs = self._init_cb([('KpGpioCallback',GpioTransceiver(24)),('KpJsonCallback',JsonTransceiver('img.json'))])
+        kp_cbs = self._init_cb([('KpGpioCallback',GpioTransceiver(26,bcd=False)),('KpJsonCallback',JsonTransceiver('kp.json'))])
         def ordfnc(path):
             from numpy.random import permutation
             gray = path[0]
             result = []
             for p in permutation(path[1:]):
                 result.append(p)
-                #result.append(gray)
+                result.append(gray)
             return result
         slide = SlideShow(
             path=self._getFilePaths(('.jpg', '.jpeg', '.png')),

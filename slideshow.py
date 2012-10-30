@@ -33,33 +33,30 @@ class ImgMessage(JsonMessage):
             'file': fn
         })
 class KpMessage(JsonMessage):
-    _KEYS = {
-        pygame.K_KP0 : 2,
-        #pygame.K_KP1 : 0,
-        #pygame.K_KP2 : 0,
-        #pygame.K_KP3 : 0,
-        #pygame.K_KP4 : 0,
-        #pygame.K_KP5 : 0,
-        #pygame.K_KP6 : 0,
-        #pygame.K_KP7 : 0,
-        #pygame.K_KP8 : 0,
-        #pygame.K_KP9 : 0,
-        pygame.K_KP_ENTER : 1
-    }
+    _KEYS = { pygame.K_KP0 : 2, pygame.K_KP_PERIOD : 0, pygame.K_KP_ENTER : 1 }
+    _VOTES = { 1: 'red', 2: 'green', 0: 'gray' }
+    _COLORS = { 'red': (100,0,0), 'green': (0,100,0), 'gray': (50,50,50), 'black': (0,0,0) }
     @classmethod
     def isValidKey(cls, key):
         return cls._KEYS.has_key(key)
     @classmethod
     def getKey(cls, key):
         return cls._KEYS.get(key)
-    def __init__(self, key,seq, img,principal):
+    @classmethod
+    def getVote(cls, key):
+        return cls._VOTES.get(key)
+    @classmethod
+    def getColor(cls, key):
+        return cls._COLORS.get(key)
+    def __init__(self, key, color, seq, img,principal):
         if not KpMessage.isValidKey(key):
             raise Exception('Das Fak !')
         super(KpMessage, self).__init__({
             'principal': principal,
             'key': KpMessage.getKey(key),
             'seq': seq,
-            'img': img
+            'img': img,
+            'color': color
         })
 
 class SlideShow(object):
@@ -141,7 +138,6 @@ class SlideShow(object):
         i = 0
         seq = 1
         img = None
-        VOTES = {1: (100,0,0), 2: (0,100,0), 0:(0,0,0)}
         blitdata = None
         if callable(self.img_callback):
             self.img_callback.__call__(ImgMessage(None,None,None,self.principal))
@@ -157,8 +153,9 @@ class SlideShow(object):
                     elif KpMessage.isValidKey(event.key):
                         print '\nKeypress:   ' + event.unicode
                         if callable(self.kp_callback):
-                            self.kp_callback.__call__(KpMessage(event.key,seq,img,self.principal))
-                            background = VOTES.get(KpMessage.getKey(event.key)) if KpMessage.isValidKey(event.key) else (0,0,0)
+                            color = KpMessage.getVote(KpMessage.getKey(event.key)) if KpMessage.isValidKey(event.key) else 'black'
+                            self.kp_callback.__call__(KpMessage(event.key,color,seq,img,self.principal))
+                            background = KpMessage.getColor(color)
                             if blitdata and background:
                                 self._refresh(main_surface, blitdata, background)
                         seq += 1
@@ -173,8 +170,7 @@ class SlideShow(object):
                     img = re.match(r'(.*)[.][^.]+', fn).group(1).replace('.','')
                     print '\nShowing:   ' + self.paths[i]
                     blitdata = self._rationalSizer(pygame.image.load(self.paths[i]), resolution)
-                    background = (0,0,0)
-                    main_surface = self._refresh(main_surface, blitdata, background)
+                    main_surface = self._refresh(main_surface, blitdata, KpMessage.getColor('black'))
                     if callable(self.img_callback):
                         self.img_callback.__call__(ImgMessage(img,i,fn,self.principal))
                     i += 1

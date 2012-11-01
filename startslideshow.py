@@ -111,7 +111,7 @@ class Base(object):
             path=self._getFilePaths(('.jpg', '.jpeg', '.png')),
             transition='None',
             fullscreen=True,
-            delay=10,
+            delay=5,
             order=ordfnc,
             principal=self.editable.get_text(),
             img_callback = img_cbs,
